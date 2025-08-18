@@ -1,0 +1,37 @@
+{
+  "name": "invitacion-boda-maria-carlos",
+  "version": "1.0.0",
+  "description": "Invitación de boda profesional y moderna para María & Carlos",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "vite"
+  },
+  "dependencies": {
+    "framer-motion": "^10.16.4",
+    "lucide-react": "^0.294.0",
+    "ogl": "^1.0.11",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-intersection-observer": "^9.5.3",
+    "react-tsparticles": "^2.12.2",
+    "tsparticles": "^3.9.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "@vitejs/plugin-react": "^4.1.1",
+    "vite": "^5.0.0"
+  },
+  "keywords": [
+    "wedding",
+    "invitation",
+    "react",
+    "modern",
+    "professional"
+  ],
+  "author": "María & Carlos",
+  "license": "MIT"
+}
