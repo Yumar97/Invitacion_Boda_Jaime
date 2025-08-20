@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import CircularGallery from './CircularGallery'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Calendar, Clock, MapPin, Phone, Mail, Heart } from 'lucide-react'
@@ -9,6 +9,10 @@ const WeddingInvitation = () => {
   const [letterOffsetX, setLetterOffsetX] = useState(0)
   const [bgImgHeight, setBgImgHeight] = useState('90%')
   const [bgOffsetX, setBgOffsetX] = useState(0)
+  const [bgPosY, setBgPosY] = useState('50%')
+  const [bgBaseShift, setBgBaseShift] = useState(12)
+  const [bgImgAspect, setBgImgAspect] = useState(null)
+  const overlayRef = useRef(null)
 
   useEffect(() => {
     const calcOffset = () => {
@@ -20,17 +24,47 @@ const WeddingInvitation = () => {
       else val = -Math.round(w * 0.06)
       setLetterOffsetX(val)
 
-      // Ajuste del tamaño de la imagen de fondo (altura) para que no tape la carta
+      // Ajuste avanzado del fondo (altura/posición) para que destaque sin tapar la carta
+      const h = window.innerHeight
+      const aspect = w / h
+
+      // Altura de la imagen (más generosa para dar protagonismo al sujeto)
       let sizePct
-      if (w >= 1280) sizePct = '65%'
-      else if (w >= 1024) sizePct = '60%'
-      else if (w >= 768) sizePct = '55%'
-      else sizePct = '50%'
+      if (w >= 1536) sizePct = '72%'
+      else if (w >= 1280) sizePct = '68%'
+      else if (w >= 1024) sizePct = '64%'
+      else if (w >= 768) sizePct = '58%'
+      else sizePct = '56%'
       setBgImgHeight(sizePct)
+
+      // Desplazamiento base horizontal para encuadrar el rostro del perro
+      let baseShift
+      if (w >= 1536) baseShift = 140
+      else if (w >= 1280) baseShift = 120
+      else if (w >= 1024) baseShift = 100
+      else if (w >= 768) baseShift = 80
+      else baseShift = 40
+      setBgBaseShift(baseShift)
+
+      // Posición vertical sutil según relación de aspecto
+      let posY
+      if (aspect > 1.6) posY = '52%'
+      else if (aspect < 1.2) posY = '48%'
+      else posY = '50%'
+      setBgPosY(posY)
     }
     calcOffset()
     window.addEventListener('resize', calcOffset)
     return () => window.removeEventListener('resize', calcOffset)
+  }, [])
+
+  // Cargar dimensiones de la imagen de fondo para calcular su rectángulo visible
+  useEffect(() => {
+    const img = new Image()
+    img.src = '/img/Fondo_opcion2.jpeg'
+    img.onload = () => {
+      setBgImgAspect(img.naturalWidth / img.naturalHeight)
+    }
   }, [])
 
   // Parallax sutil del fondo al mover el mouse (solo con carta abierta)
@@ -43,7 +77,9 @@ const WeddingInvitation = () => {
     let target = 0
     const onMove = (e) => {
       const ratio = e.clientX / window.innerWidth
-      target = (ratio - 0.5) * 24 // desplazamiento +-12px
+      const w = window.innerWidth
+      const amplitude = w >= 1280 ? 24 : (w >= 1024 ? 18 : (w >= 768 ? 12 : 8))
+      target = (ratio - 0.5) * amplitude
       if (!running) {
         running = true
         const loop = () => {
@@ -60,6 +96,36 @@ const WeddingInvitation = () => {
       if (anim) cancelAnimationFrame(anim)
     }
   }, [isEnvelopeOpen])
+
+  // Calcular y aplicar variables CSS para que el marco coincida con el área real de la imagen
+  useEffect(() => {
+    if (!isEnvelopeOpen || !overlayRef.current || !bgImgAspect) return
+
+    const w = window.innerWidth
+    const h = window.innerHeight
+
+    const pctVal = parseFloat(bgImgHeight)
+    const heightPct = isNaN(pctVal) ? 60 : pctVal
+    const scaledH = h * (heightPct / 100)
+    const scaledW = scaledH * bgImgAspect
+
+    const right = w - (bgBaseShift + Math.round(bgOffsetX))
+    let left = right - scaledW
+    left = Math.max(0, Math.min(left, w - 1))
+    let width = Math.min(scaledW, w - left)
+
+    const posYVal = parseFloat(bgPosY)
+    const posY = isNaN(posYVal) ? 50 : posYVal
+    let top = h * (posY / 100) - scaledH / 2
+    top = Math.max(0, Math.min(top, h - 1))
+    let height = Math.min(scaledH, h - top)
+
+    const el = overlayRef.current
+    el.style.setProperty('--frame-left', `${left}px`)
+    el.style.setProperty('--frame-top', `${top}px`)
+    el.style.setProperty('--frame-width', `${width}px`)
+    el.style.setProperty('--frame-height', `${height}px`)
+  }, [isEnvelopeOpen, bgImgAspect, bgImgHeight, bgBaseShift, bgOffsetX, bgPosY])
 
   const handleEnvelopeClick = () => {
     setIsEnvelopeOpen(true)
@@ -125,27 +191,27 @@ const WeddingInvitation = () => {
     }
   }
 
-  const galleryItems = [
+  const galleryItems = useMemo(() => ([
     { image: '/img/Imagen001.jpeg', text: '' },
     { image: '/img/Imagen003.jpeg', text: '' },
     { image: '/img/Imagen004.jpeg', text: '' },
     { image: '/img/Imagen005.jpeg', text: '' },
     { image: '/img/Imagen006.jpeg', text: '' },
-  ];
+  ]), []);
 
   return (
     <div className="wedding-invitation-container">
       {/* Fondo con imagen */}
       <div
-        className={`background-image ${isEnvelopeOpen ? 'opened' : ''}`}
+        className={`background-image ${isEnvelopeOpen ? 'opened perrifo' : ''}`}
         style={{
           transition: 'background-position 900ms cubic-bezier(0.22, 1, 0.36, 1), background-size 900ms cubic-bezier(0.22, 1, 0.36, 1)',
           ...(isEnvelopeOpen
-            ? { backgroundImage: `url(/img/Fondo_opcion2.jpeg)`, backgroundPosition: `calc(100% - ${12 + Math.round(bgOffsetX)}px) center`, backgroundSize: `auto ${bgImgHeight}` }
+            ? { backgroundImage: `url(/img/Fondo_opcion2.jpeg)`, backgroundPosition: `calc(100% - ${bgBaseShift + Math.round(bgOffsetX)}px) ${bgPosY}`, backgroundSize: `auto ${bgImgHeight}` }
             : {})
         }}
       />
-      <div className={`background-overlay ${isEnvelopeOpen ? 'opened' : ''}`} />
+      <div className={`background-overlay ${isEnvelopeOpen ? 'opened' : ''}`} ref={overlayRef} />
 
       <AnimatePresence>
         {!isEnvelopeOpen ? (

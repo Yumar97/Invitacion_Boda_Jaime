@@ -40,7 +40,7 @@ function createTextTexture(gl, text, font = "600 24px Montserrat, sans-serif", c
   context.textAlign = "center";
   context.clearRect(0, 0, canvas.width, canvas.height);
   context.fillText(text, canvas.width / (2 * dpr), canvas.height / (2 * dpr));
-  const texture = new Texture(gl, { generateMipmaps: true, minFilter: gl.LINEAR_MIPMAP_LINEAR, magFilter: gl.LINEAR });
+  const texture = new Texture(gl, { generateMipmaps: false, minFilter: gl.LINEAR, magFilter: gl.LINEAR });
   texture.image = canvas;
   return { texture, width: canvas.width / dpr, height: canvas.height / dpr };
 }
@@ -140,16 +140,16 @@ class Media {
 
   createShader() {
     const texture = new Texture(this.gl, {
-      generateMipmaps: true,
-      minFilter: this.gl.LINEAR_MIPMAP_LINEAR,
+      generateMipmaps: false,
+      minFilter: this.gl.LINEAR,
       magFilter: this.gl.LINEAR,
       wrapS: this.gl.CLAMP_TO_EDGE,
       wrapT: this.gl.CLAMP_TO_EDGE,
-      anisotropy: 8,
+      anisotropy: 1,
     });
 
     this.program = new Program(this.gl, {
-      depthTest: false,
+      depthTest: true,
       depthWrite: false,
       vertex: `
 precision highp float;
@@ -213,7 +213,7 @@ void main() {
       uniforms: {
         tMap: { value: texture },
         uPlaneSizes: { value: [0, 0] },
-        uImageSizes: { value: [0, 0] },
+        uImageSizes: { value: [1, 1] },
         uSpeed: { value: 0 },
         uTime: { value: 100 * Math.random() },
         uBorderRadius: { value: this.borderRadius },

@@ -38,6 +38,7 @@ body {
   position: relative;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -72,6 +73,44 @@ body {
     rgba(0, 0, 0, 0.2) 100%
   );
   z-index: 2;
+}
+
+/* Marco sutil y profesional sobre la imagen al abrir la carta (solo si la imagen de fondo es 'perrifo') */
+.background-image.perrifo + .background-overlay.opened::before {
+  content: '';
+  position: absolute;
+  left: var(--frame-left, clamp(14px, 3.5vmin, 32px));
+  top: var(--frame-top, clamp(14px, 3.5vmin, 32px));
+  width: var(--frame-width, calc(100% - clamp(14px, 3.5vmin, 32px) * 2));
+  height: var(--frame-height, calc(100% - clamp(14px, 3.5vmin, 32px) * 2));
+  border-radius: clamp(10px, 2vmin, 18px);
+  background:
+    radial-gradient(120% 120% at 50% 0%, rgba(255, 255, 255, 0.04), transparent 60%),
+    radial-gradient(120% 120% at 50% 100%, rgba(255, 255, 255, 0.04), transparent 60%),
+    radial-gradient(120% 120% at 0% 50%, rgba(255, 255, 255, 0.02), transparent 55%),
+    radial-gradient(120% 120% at 100% 50%, rgba(255, 255, 255, 0.02), transparent 55%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 48px 96px rgba(0, 0, 0, 0.35),
+    inset 0 -36px 72px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
+
+.background-image.perrifo + .background-overlay.opened::after {
+  content: '';
+  position: absolute;
+  left: var(--frame-left, clamp(14px, 3.5vmin, 32px));
+  top: var(--frame-top, clamp(14px, 3.5vmin, 32px));
+  width: var(--frame-width, calc(100% - clamp(14px, 3.5vmin, 32px) * 2));
+  height: var(--frame-height, calc(100% - clamp(14px, 3.5vmin, 32px) * 2));
+  border-radius: clamp(10px, 2vmin, 18px);
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  box-shadow:
+    0 12px 36px rgba(0, 0, 0, 0.28),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.10), rgba(212, 175, 55, 0.04) 40%, rgba(212, 175, 55, 0.10) 100%);
+  mix-blend-mode: normal;
+  pointer-events: none;
 }
 
 /* ===========================================
@@ -196,7 +235,10 @@ body {
   max-width: 600px;
   width: 90%;
   max-height: 90vh;
+  max-height: 90dvh;
   overflow-y: auto;
+  padding-top: calc(1rem + env(safe-area-inset-top));
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
 }
 
 .letter-paper {
@@ -743,6 +785,10 @@ body {
     flex-direction: column;
     gap: 0.5rem;
   }
+
+  .background-image {
+    background-attachment: scroll;
+  }
 }
 
 @media (max-width: 480px) {
@@ -961,8 +1007,8 @@ body {
 
 /* Redefinir la estructura del sobre */
 .envelope {
-  width: 400px !important;
-  height: 280px !important;
+  width: clamp(280px, 70vw, 450px) !important;
+  height: clamp(200px, 50vw, 320px) !important;
   position: relative;
   transform-style: preserve-3d;
 }
