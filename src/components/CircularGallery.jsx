@@ -355,6 +355,12 @@ class App {
     document.documentElement.classList.remove("no-js");
 
     this.container = container;
+    // Mejorar interacción en móviles
+    if (this.container && this.container.style) {
+      this.container.style.touchAction = 'pan-y';
+      this.container.style.overscrollBehavior = 'contain';
+      this.container.style.webkitOverflowScrolling = 'touch';
+    }
     this.scrollSpeed = scrollSpeed;
     this.scroll = { ease: scrollEase, current: 0, target: 0, last: 0 };
     this.onCheckDebounce = debounce(this.onCheck, 200);
@@ -438,6 +444,7 @@ class App {
   }
 
   onTouchDown(e) {
+    if (e && e.preventDefault) e.preventDefault();
     this.isDown = true;
     this.scroll.position = this.scroll.current;
     this.start = e.touches ? e.touches[0].clientX : e.clientX;
@@ -445,6 +452,7 @@ class App {
 
   onTouchMove(e) {
     if (!this.isDown) return;
+    if (e && e.preventDefault) e.preventDefault();
     const x = e.touches ? e.touches[0].clientX : e.clientX;
     const distance = (this.start - x) * (this.scrollSpeed * 0.025);
     this.scroll.target = this.scroll.position + distance;
@@ -456,6 +464,7 @@ class App {
   }
 
   onWheel(e) {
+    if (e && e.preventDefault) e.preventDefault();
     const delta = e.deltaY || e.wheelDelta || e.detail;
     this.scroll.target += (delta > 0 ? this.scrollSpeed : -this.scrollSpeed) * 0.2;
     this.onCheckDebounce();
@@ -513,25 +522,27 @@ class App {
     this.boundOnTouchUp = this.onTouchUp.bind(this);
 
     window.addEventListener("resize", this.boundOnResize);
-    window.addEventListener("mousewheel", this.boundOnWheel);
-    window.addEventListener("wheel", this.boundOnWheel);
-    window.addEventListener("mousedown", this.boundOnTouchDown);
+    if (this.container) {
+      this.container.addEventListener("wheel", this.boundOnWheel, { passive: false });
+      this.container.addEventListener("mousedown", this.boundOnTouchDown);
+      this.container.addEventListener("touchstart", this.boundOnTouchDown, { passive: false });
+    }
     window.addEventListener("mousemove", this.boundOnTouchMove);
     window.addEventListener("mouseup", this.boundOnTouchUp);
-    window.addEventListener("touchstart", this.boundOnTouchDown);
-    window.addEventListener("touchmove", this.boundOnTouchMove);
+    window.addEventListener("touchmove", this.boundOnTouchMove, { passive: false });
     window.addEventListener("touchend", this.boundOnTouchUp);
   }
 
   destroy() {
     window.cancelAnimationFrame(this.raf);
     window.removeEventListener("resize", this.boundOnResize);
-    window.removeEventListener("mousewheel", this.boundOnWheel);
-    window.removeEventListener("wheel", this.boundOnWheel);
-    window.removeEventListener("mousedown", this.boundOnTouchDown);
+    if (this.container) {
+      this.container.removeEventListener("wheel", this.boundOnWheel);
+      this.container.removeEventListener("mousedown", this.boundOnTouchDown);
+      this.container.removeEventListener("touchstart", this.boundOnTouchDown);
+    }
     window.removeEventListener("mousemove", this.boundOnTouchMove);
     window.removeEventListener("mouseup", this.boundOnTouchUp);
-    window.removeEventListener("touchstart", this.boundOnTouchDown);
     window.removeEventListener("touchmove", this.boundOnTouchMove);
     window.removeEventListener("touchend", this.boundOnTouchUp);
 
