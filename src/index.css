@@ -788,6 +788,8 @@ body {
 
   .background-image {
     background-attachment: scroll;
+    background-size: cover;
+    background-position: center;
   }
 }
 
