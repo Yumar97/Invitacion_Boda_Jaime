@@ -369,6 +369,13 @@ class App {
     this.createCamera();
     this.createScene();
     this.onResize();
+    // Recalcular cuando el contenedor cambie de tamaño (animaciones/visibilidad)
+    if (typeof ResizeObserver !== 'undefined' && this.container) {
+      this.resizeObserver = new ResizeObserver(() => this.onResize());
+      this.resizeObserver.observe(this.container);
+    }
+    // rAF de inicialización para asegurar que hay layout antes del primer render
+    this.initRaf = window.requestAnimationFrame(() => this.onResize());
     this.createGeometry();
     this.createMedias(items, bend, textColor, borderRadius, font);
     this.update();
@@ -535,6 +542,7 @@ class App {
 
   destroy() {
     window.cancelAnimationFrame(this.raf);
+    if (this.initRaf) window.cancelAnimationFrame(this.initRaf);
     window.removeEventListener("resize", this.boundOnResize);
     if (this.container) {
       this.container.removeEventListener("wheel", this.boundOnWheel);
@@ -548,6 +556,10 @@ class App {
 
     if (this.renderer && this.renderer.gl && this.renderer.gl.canvas.parentNode) {
       this.renderer.gl.canvas.parentNode.removeChild(this.renderer.gl.canvas);
+    }
+    if (this.resizeObserver) {
+      try { this.resizeObserver.disconnect(); } catch (_) {}
+      this.resizeObserver = null;
     }
   }
 }
