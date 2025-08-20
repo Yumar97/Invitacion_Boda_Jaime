@@ -139,13 +139,19 @@ class Media {
   }
 
   createShader() {
+    const aniso = (() => {
+      const ext = this.gl.getExtension('EXT_texture_filter_anisotropic') || this.gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic') || this.gl.getExtension('MOZ_EXT_texture_filter_anisotropic');
+      if (!ext) return 1;
+      const max = this.gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT) || 2;
+      return Math.min(4, max);
+    })();
     const texture = new Texture(this.gl, {
       generateMipmaps: false,
       minFilter: this.gl.LINEAR,
       magFilter: this.gl.LINEAR,
       wrapS: this.gl.CLAMP_TO_EDGE,
       wrapT: this.gl.CLAMP_TO_EDGE,
-      anisotropy: 1,
+      anisotropy: aniso,
     });
 
     this.program = new Program(this.gl, {
@@ -159,11 +165,14 @@ uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
 uniform float uTime;
 uniform float uSpeed;
+uniform float uDistort;
 varying vec2 vUv;
 void main() {
   vUv = uv;
   vec3 p = position;
-  p.z = (sin(p.x * 3.0 + uTime * 0.6) * 0.25 + cos(p.y * 2.0 + uTime * 0.6) * 0.2) * (0.08 + abs(uSpeed) * 0.3);
+  float wave = (sin(p.x * 3.0 + uTime * 0.6) * 0.25 + cos(p.y * 2.0 + uTime * 0.6) * 0.2);
+  float amp = (0.08 + clamp(abs(uSpeed), 0.0, 0.8) * 0.25);
+  p.z = uDistort * wave * amp;
   gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
 }
 `,
@@ -217,6 +226,7 @@ void main() {
         uSpeed: { value: 0 },
         uTime: { value: 100 * Math.random() },
         uBorderRadius: { value: this.borderRadius },
+        uDistort: { value: 1 },
       },
       transparent: true,
     });
@@ -300,6 +310,13 @@ void main() {
       if (this.plane.program.uniforms.uViewportSizes) {
         this.plane.program.uniforms.uViewportSizes.value = [this.viewport.width, this.viewport.height];
       }
+    }
+
+    // ajustar deformación para móviles/tablets
+    const sw = this.screen.width;
+    const distort = sw < 480 ? 0.25 : (sw < 768 ? 0.4 : (sw < 1024 ? 0.7 : 1.0));
+    if (this.plane && this.plane.program && this.plane.program.uniforms.uDistort) {
+      this.plane.program.uniforms.uDistort.value = distort;
     }
 
     this.scale = this.screen.height / 1500;
